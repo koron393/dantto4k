@@ -1,12 +1,12 @@
 ﻿#include <iostream>
 #include "stream.h"
-#include "MmtTlvDemuxer.h"
+#include "mmtTlvDemuxer.h"
 #include "remuxerHandler.h"
-#include "bonTuner.h"
 #include "config.h"
 #include "dantto4k.h"
 #include "logger.h"
 #ifdef _WIN32
+#include "bonTuner.h"
 #include <dbghelp.h>
 #pragma comment(lib, "dbghelp.lib")
 #endif
@@ -14,9 +14,9 @@
 MmtTlv::MmtTlvDemuxer demuxer;
 std::vector<uint8_t> output;
 RemuxerHandler handler(demuxer, output);
-CBonTuner bonTuner;
 
 #ifdef _WIN32
+CBonTuner bonTuner;
 HINSTANCE hDantto4kModule = nullptr;
 
 extern "C" __declspec(dllexport) IBonDriver* CreateBonDriver()
@@ -24,7 +24,7 @@ extern "C" __declspec(dllexport) IBonDriver* CreateBonDriver()
     try {
         std::string path = getConfigFilePath(hDantto4kModule);
         config = loadConfig(path);
-        
+
         demuxer.setDemuxerHandler(handler);
         demuxer.setSmartCardReaderName(config.smartCardReaderName);
         demuxer.init();
@@ -53,9 +53,9 @@ BOOL APIENTRY DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID lpReserved)
 void PrintStackTrace(CONTEXT* context) {
     HANDLE process = GetCurrentProcess();
     HANDLE thread = GetCurrentThread();
-    
+
     SymInitialize(process, NULL, TRUE);
-    
+
     STACKFRAME64 stackFrame = { 0 };
     DWORD machineType = IMAGE_FILE_MACHINE_AMD64;
 
@@ -81,14 +81,14 @@ void PrintStackTrace(CONTEXT* context) {
                 SYMBOL_INFO* symbol = (SYMBOL_INFO*)malloc(sizeof(SYMBOL_INFO) + MAX_SYM_NAME);
                 symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
                 symbol->MaxNameLen = MAX_SYM_NAME;
-                
+
                 if (SymFromAddr(process, address, NULL, symbol)) {
                     DWORD64 offset = address - baseAddress;
                     log_debug("%s+0x%llx", fileName.c_str(), offset);
                 } else {
                     log_debug("0x%llx", address);
                 }
-                
+
                 free(symbol);
             }
         }
@@ -103,17 +103,24 @@ LONG WINAPI ExceptionHandler(EXCEPTION_POINTERS* exceptionInfo) {
     return EXCEPTION_EXECUTE_HANDLER;
 }
 
+#endif
+
 int processPacketWithHandler(MmtTlv::Common::ReadStream& input) {
+#ifdef _WIN32
 	__try {
 		return demuxer.processPacket(input);
 	}
 	__except (ExceptionHandler(GetExceptionInformation())) {
 	}
-
 	return 0;
-}
-
+#else
+	try {
+		return demuxer.processPacket(input);
+	} catch (ts::Exception ex) {
+		return 0;
+	}
 #endif
+}
 
 size_t getLeftBytes(std::ifstream& file) {
     std::streampos currentPos = file.tellg();
@@ -131,14 +138,22 @@ void printReaderList() {
     LONG result = SCardEstablishContext(SCARD_SCOPE_USER, nullptr, nullptr, &hContext);
 
     DWORD readersSize = 0;
+#ifdef _WIN32
     SCardListReadersA(hContext, nullptr, nullptr, &readersSize);
+#else
+    SCardListReaders(hContext, nullptr, nullptr, &readersSize);
+#endif
     if (result != SCARD_S_SUCCESS) {
         std::cerr << "Failed to get size of reader list. (result: " << result << ")" << std::endl;
         return;
     }
 
     std::vector<char> readersBuffer(readersSize);
+#ifdef _WIN32
     result = SCardListReadersA(hContext, nullptr, readersBuffer.data(), &readersSize);
+#else
+    result = SCardListReaders(hContext, nullptr, readersBuffer.data(), &readersSize);
+#endif
     if (result != SCARD_S_SUCCESS) {
         std::cerr << "Failed to get size of reader list. (result: " << result << ")" << std::endl;
         return;
@@ -181,7 +196,7 @@ int main(int argc, char* argv[]) {
     }
 
     if (inputPath == "" || outputPath == "") {
-        std::cerr << "dantto4k.exe <input.mmts> <output.ts> [options]" << std::endl;
+        std::cerr << "dantto4k_linux <input.mmts> <output.ts> [options]" << std::endl;
         std::cerr << "options:" << std::endl;
         std::cerr << "\t--disableADTSConversion: Uses the raw LATM format without converting to ADTS." << std::endl;
         std::cerr << "\t--listSmartCardReader: Lists the available smart card readers." << std::endl;
@@ -205,7 +220,7 @@ int main(int argc, char* argv[]) {
         std::cerr << "Unable to open output file: " << inputPath << std::endl;
         return 1;
     }
-    
+
     demuxer.setDemuxerHandler(handler);
     demuxer.setSmartCardReaderName(config.smartCardReaderName);
     demuxer.init();
@@ -224,24 +239,24 @@ int main(int argc, char* argv[]) {
             inputFs.read(reinterpret_cast<char*>(buffer.data() + buffer.size() - readSize), readSize);
         }
 
-		MmtTlv::Common::ReadStream stream(buffer);
-		while (!stream.isEof()) {
-			size_t cur = stream.getCur();
-			int n = processPacketWithHandler(stream);
+        MmtTlv::Common::ReadStream stream(buffer);
+        while (!stream.isEof()) {
+            size_t cur = stream.getCur();
+            int n = processPacketWithHandler(stream);
 
-			// not valid tlv
-			if (n == -2) {
-				continue;
-			}
+            // not valid tlv
+            if (n == -2) {
+                continue;
+            }
 
-			// not enough buffer for tlv payload
-			if (n == -1) {
-				stream.setCur(cur);
-				break;
-			}
-		}
+            // not enough buffer for tlv payload
+            if (n == -1) {
+                stream.setCur(cur);
+                    break;
+            }
+        }
 
-		buffer.erase(buffer.begin(), buffer.begin() + (buffer.size() - stream.leftBytes()));
+        buffer.erase(buffer.begin(), buffer.begin() + (buffer.size() - stream.leftBytes()));
 
         outputFs.write(reinterpret_cast<const char*>(output.data()), output.size());
         output.clear();
@@ -249,7 +264,6 @@ int main(int argc, char* argv[]) {
 
     inputFs.close();
     outputFs.close();
-
 
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed_seconds = end - start;
