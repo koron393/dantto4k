@@ -3,6 +3,9 @@
 #include <mutex>
 #include "IBonDriver2.h"
 #include "config.h"
+#ifdef __linux__
+#include "typedef.h"
+#endif
 
 class CBonTuner : public IBonDriver2
 {

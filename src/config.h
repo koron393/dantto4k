@@ -1,6 +1,9 @@
 #pragma once
 #include <string>
 #include <fstream>
+#ifdef __linux__
+#include "typedef.h"
+#endif
 
 class Config {
 public:
