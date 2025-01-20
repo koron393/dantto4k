@@ -55,7 +55,7 @@ class NTPv4;
 class RemuxerHandler : public MmtTlv::DemuxerHandler {
 public:
 	RemuxerHandler(MmtTlv::MmtTlvDemuxer& demuxer, std::vector<uint8_t>& output)
-		: demuxer(demuxer), output(output) {
+		: output(output), demuxer(demuxer) {
 	}
 
 	// MPU data

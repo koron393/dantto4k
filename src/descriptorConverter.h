@@ -339,7 +339,7 @@ struct DescriptorConverter<MmtTlv::MhSeriesDescriptor> {
             try {
                 tsDescriptor.expire_date = ts::Time(tm.tm_year, tm.tm_mon, tm.tm_mday, 0, 0);
             }
-            catch (ts::Time::TimeError) {
+            catch (ts::Time::TimeError const&) {
                 return {};
             }
         }

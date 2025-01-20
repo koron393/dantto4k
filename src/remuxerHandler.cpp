@@ -176,7 +176,7 @@ void RemuxerHandler::writeStream(const std::shared_ptr<MmtTlv::MmtStream> mmtStr
 
     uint64_t tsPts = MmtTlv::NOPTS_VALUE;
     uint64_t tsDts = MmtTlv::NOPTS_VALUE;
-    
+
     if ((mfuData->pts != MmtTlv::NOPTS_VALUE && mfuData->dts != MmtTlv::NOPTS_VALUE) && timeBase.den > 0) {
         tsPts = av_rescale_q(mfuData->pts, timeBase, tsTimeBase);
         tsDts = av_rescale_q(mfuData->dts, timeBase, tsTimeBase);
@@ -222,7 +222,7 @@ void RemuxerHandler::onMhBit(const std::shared_ptr<MmtTlv::MhBit>& mhBit)
 {
     ts::BIT tsBit(mhBit->versionNumber, mhBit->currentNextIndicator);
     tsBit.original_network_id = mhBit->originalNetworkId;
-    
+
     for (const auto& descriptor : mhBit->descriptors.list) {
         switch (descriptor->getDescriptorTag()) {
         case MmtTlv::MhSiParameterDescriptor::kDescriptorTag:
@@ -230,14 +230,14 @@ void RemuxerHandler::onMhBit(const std::shared_ptr<MmtTlv::MhBit>& mhBit)
             auto mmtDescriptor = std::dynamic_pointer_cast<MmtTlv::MhSiParameterDescriptor>(descriptor);
             ts::SIParameterDescriptor tsDescriptor;
             tsDescriptor.parameter_version = mmtDescriptor->parameterVersion;
-            
+
             struct tm tm;
             EITDecodeMjd(mmtDescriptor->updateTime, &tm.tm_year, &tm.tm_mon, &tm.tm_mday);
 
             try {
                 tsDescriptor.update_time = ts::Time(tm.tm_year, tm.tm_mon, tm.tm_mday, 0, 0);
             }
-            catch (ts::Time::TimeError) {
+            catch (ts::Time::TimeError const&) {
                 return;
             }
 
@@ -252,7 +252,7 @@ void RemuxerHandler::onMhBit(const std::shared_ptr<MmtTlv::MhBit>& mhBit)
                 memcpy(tsEntry.table_description.data(), entry.tableDescriptionByte.data(), entry.tableDescriptionByte.size());
                 tsDescriptor.entries.push_back(tsEntry);
             }
-            
+
             tsBit.descs.add(duck, tsDescriptor);
             break;
         }
@@ -274,11 +274,11 @@ void RemuxerHandler::onMhBit(const std::shared_ptr<MmtTlv::MhBit>& mhBit)
                 for (auto affiliationId : mmtDescriptor->affiliationIds) {
                     tsDescriptor.affiliation_ids.emplace_back(affiliationId);
                 }
-                
+
                 for (const auto& broadcasterId : mmtDescriptor->broadcasterIds) {
                     tsDescriptor.broadcasters.emplace_back(broadcasterId.networkId, broadcasterId.broadcasterId);
                 }
-            
+
                 tsBit.descs.add(duck, tsDescriptor);
                 break;
             }
@@ -287,14 +287,14 @@ void RemuxerHandler::onMhBit(const std::shared_ptr<MmtTlv::MhBit>& mhBit)
                 auto mmtDescriptor = std::dynamic_pointer_cast<MmtTlv::MhSiParameterDescriptor>(descriptor);
                 ts::SIParameterDescriptor tsDescriptor;
                 tsDescriptor.parameter_version = mmtDescriptor->parameterVersion;
-            
+
                 struct tm tm;
                 EITDecodeMjd(mmtDescriptor->updateTime, &tm.tm_year, &tm.tm_mon, &tm.tm_mday);
 
                 try {
                     tsDescriptor.update_time = ts::Time(tm.tm_year, tm.tm_mon, tm.tm_mday, 0, 0);
                 }
-                catch (ts::Time::TimeError) {
+                catch (ts::Time::TimeError const&) {
                     return;
                 }
 
@@ -309,7 +309,7 @@ void RemuxerHandler::onMhBit(const std::shared_ptr<MmtTlv::MhBit>& mhBit)
                     memcpy(tsEntry.table_description.data(), entry.tableDescriptionByte.data(), entry.tableDescriptionByte.size());
                     tsDescriptor.entries.push_back(tsEntry);
                 }
-            
+
                 tsBit.descs.add(duck, tsDescriptor);
                 break;
             }
@@ -322,7 +322,7 @@ void RemuxerHandler::onMhBit(const std::shared_ptr<MmtTlv::MhBit>& mhBit)
     tsBit.serialize(duck, table);
 
     ts::OneShotPacketizer packetizer(duck, ISDB_BIT_PID);
-    for (int i = 0; i < table.sectionCount(); i++) {
+    for (long unsigned int i = 0; i < table.sectionCount(); i++) {
         const ts::SectionPtr& section = table.sectionAt(i);
         section->setSectionNumber(mhBit->sectionNumber);
         section->setLastSectionNumber(mhBit->lastSectionNumber);
@@ -352,7 +352,7 @@ void RemuxerHandler::onMhEit(const std::shared_ptr<MmtTlv::MhEit>& mhEit)
             tsEvent.start_time = ts::Time(startTime.tm_year + 1900, startTime.tm_mon + 1, startTime.tm_mday,
                 startTime.tm_hour, startTime.tm_min, startTime.tm_sec);
         }
-        catch(ts::Time::TimeError){
+        catch(ts::Time::TimeError const&){
             continue;
         }
 
@@ -384,7 +384,7 @@ void RemuxerHandler::onMhEit(const std::shared_ptr<MmtTlv::MhEit>& mhEit)
             {
                 auto mmtDescriptor = std::dynamic_pointer_cast<MmtTlv::MhAudioComponentDescriptor>(descriptor);
                 auto tsDescriptor = DescriptorConverter<MmtTlv::MhAudioComponentDescriptor>::convert(*mmtDescriptor);
-                
+
                 tsEvent.descs.add(duck, tsDescriptor);
                 break;
             }
@@ -392,7 +392,7 @@ void RemuxerHandler::onMhEit(const std::shared_ptr<MmtTlv::MhEit>& mhEit)
             {
                 auto mmtDescriptor = std::dynamic_pointer_cast<MmtTlv::VideoComponentDescriptor>(descriptor);
                 auto tsDescriptor = DescriptorConverter<MmtTlv::VideoComponentDescriptor>::convert(*mmtDescriptor);
-                
+
                 tsEvent.descs.add(duck, tsDescriptor);
                 break;
             }
@@ -400,7 +400,7 @@ void RemuxerHandler::onMhEit(const std::shared_ptr<MmtTlv::MhEit>& mhEit)
             {
                 auto mmtDescriptor = std::dynamic_pointer_cast<MmtTlv::MhContentDescriptor>(descriptor);
                 auto tsDescriptor = DescriptorConverter<MmtTlv::MhContentDescriptor>::convert(*mmtDescriptor);
-               
+
                 tsEvent.descs.add(duck, tsDescriptor);
                 break;
             }
@@ -432,7 +432,7 @@ void RemuxerHandler::onMhEit(const std::shared_ptr<MmtTlv::MhEit>& mhEit)
             {
                 auto mmtDescriptor = std::dynamic_pointer_cast<MmtTlv::MhSeriesDescriptor>(descriptor);
                 auto tsDescriptor = DescriptorConverter<MmtTlv::MhSeriesDescriptor>::convert(*mmtDescriptor);
-                
+
                 tsEvent.descs.add(duck, tsDescriptor);
                 break;
             }
@@ -448,7 +448,7 @@ void RemuxerHandler::onMhEit(const std::shared_ptr<MmtTlv::MhEit>& mhEit)
             {
                 auto mmtDescriptor = std::dynamic_pointer_cast<MmtTlv::MultimediaServiceInformationDescriptor>(descriptor);
                 auto tsDescriptor = DescriptorConverter<MmtTlv::MultimediaServiceInformationDescriptor>::convert(*mmtDescriptor);
-                
+
                 tsEvent.descs.add(duck, tsDescriptor);
                 break;
             }
@@ -457,7 +457,7 @@ void RemuxerHandler::onMhEit(const std::shared_ptr<MmtTlv::MhEit>& mhEit)
 
         tsEit.events[tsEvent.event_id] = tsEvent;
 	}
-    
+
     // EITs table ID range in MMT/TLV:   0x8C ~ 0x9B
     // EITs table ID range in MPEG-2 TS: 0x50 ~ 0x5F
     tsEit.last_table_id = mhEit->lastTableId - 0x8C + 0x50;
@@ -466,7 +466,7 @@ void RemuxerHandler::onMhEit(const std::shared_ptr<MmtTlv::MhEit>& mhEit)
     tsEit.serialize(duck, table);
 
     ts::OneShotPacketizer packetizer(duck, DVB_EIT_PID);
-    for (int i = 0; i < table.sectionCount(); i++) {
+    for (long unsigned int i = 0; i < table.sectionCount(); i++) {
         const ts::SectionPtr& section = table.sectionAt(i);
         if (mhEit->isPf()) {
             section.get()->setTableId(0x4E);
@@ -511,7 +511,7 @@ void RemuxerHandler::onMhSdtActual(const std::shared_ptr<MmtTlv::MhSdt>& mhSdt)
             {
                 auto mmtDescriptor = std::dynamic_pointer_cast<MmtTlv::MhServiceDescriptor>(descriptor);
                 auto tsDescriptor = DescriptorConverter<MmtTlv::MhServiceDescriptor>::convert(*mmtDescriptor);
-               
+
                 tsService.descs.add(duck, tsDescriptor);
                 break;
             }
@@ -519,7 +519,7 @@ void RemuxerHandler::onMhSdtActual(const std::shared_ptr<MmtTlv::MhSdt>& mhSdt)
             {
                 auto mmtDescriptor = std::dynamic_pointer_cast<MmtTlv::MhLogoTransmissionDescriptor>(descriptor);
                 auto tsDescriptor = DescriptorConverter<MmtTlv::MhLogoTransmissionDescriptor>::convert(*mmtDescriptor);
-                
+
                 tsService.descs.add(duck, tsDescriptor);
                 break;
             }
@@ -532,7 +532,7 @@ void RemuxerHandler::onMhSdtActual(const std::shared_ptr<MmtTlv::MhSdt>& mhSdt)
     tsSdt.serialize(duck, table);
 
     ts::OneShotPacketizer packetizer(duck, DVB_SDT_PID);
-    for (int i = 0; i < table.sectionCount(); i++) {
+    for (long unsigned int i = 0; i < table.sectionCount(); i++) {
         const ts::SectionPtr& section = table.sectionAt(i);
         section.get()->setSectionNumber(mhSdt->sectionNumber);
         section.get()->setLastSectionNumber(mhSdt->lastSectionNumber);
@@ -579,7 +579,7 @@ void RemuxerHandler::onPlt(const std::shared_ptr<MmtTlv::Plt>& plt)
 
     ts::OneShotPacketizer packetizer(duck, MPEG_PAT_PID);
 
-    for (int i = 0; i < table.sectionCount(); i++) {
+    for (long unsigned int i = 0; i < table.sectionCount(); i++) {
         const ts::SectionPtr& section = table.sectionAt(i);
         packetizer.addSection(section);
 
@@ -620,7 +620,7 @@ void RemuxerHandler::onMpt(const std::shared_ptr<MmtTlv::Mpt>& mpt)
 
     int streamIndex = 0;
     for (auto& asset : mpt->assets) {
-        for (int i = 0; i < asset.locationCount; i++) {
+        for (long unsigned int i = 0; i < asset.locationCount; i++) {
             if (asset.locationInfos[i].locationType == 0) {
                 const auto& mmtStream = demuxer.mapStreamByStreamIdx[streamIndex];
                 if (mmtStream->getComponentTag() == -1) {
@@ -641,7 +641,7 @@ void RemuxerHandler::onMpt(const std::shared_ptr<MmtTlv::Mpt>& mpt)
                 }
 
                 ts::PMT::Stream stream(&tsPmt, streamType);
-                
+
                 if (streamType == STREAM_TYPE_VIDEO_HEVC) {
                     ts::RegistrationDescriptor descriptor;
                     descriptor.format_identifier = 0x48455643; // HEVC
@@ -654,7 +654,7 @@ void RemuxerHandler::onMpt(const std::shared_ptr<MmtTlv::Mpt>& mpt)
                     {
                         auto mmtDescriptor = std::dynamic_pointer_cast<MmtTlv::MhStreamIdentificationDescriptor>(descriptor);
                         auto tsDescriptor = DescriptorConverter<MmtTlv::MhStreamIdentificationDescriptor>::convert(*mmtDescriptor);
-                        
+
                         stream.descs.add(duck, tsDescriptor);
                         break;
                     }
@@ -673,16 +673,16 @@ void RemuxerHandler::onMpt(const std::shared_ptr<MmtTlv::Mpt>& mpt)
         {
             auto mmtDescriptor = std::dynamic_pointer_cast<MmtTlv::AccessControlDescriptor>(descriptor);
             auto tsDescriptor = DescriptorConverter<MmtTlv::AccessControlDescriptor>::convert(*mmtDescriptor);
-            
+
             tsPmt.descs.add(duck, tsDescriptor);
             break;
         }
-        
+
         case MmtTlv::ContentCopyControlDescriptor::kDescriptorTag:
         {
             auto mmtDescriptor = std::dynamic_pointer_cast<MmtTlv::ContentCopyControlDescriptor>(descriptor);
             auto tsDescriptor = DescriptorConverter<MmtTlv::ContentCopyControlDescriptor>::convert(*mmtDescriptor);
-            
+
             tsPmt.descs.add(duck, tsDescriptor);
             break;
         }
@@ -694,7 +694,7 @@ void RemuxerHandler::onMpt(const std::shared_ptr<MmtTlv::Mpt>& mpt)
 
     ts::OneShotPacketizer packetizer(duck, pid);
 
-    for (int i = 0; i < table.sectionCount(); i++) {
+    for (long unsigned int i = 0; i < table.sectionCount(); i++) {
         const ts::SectionPtr& section = table.sectionAt(i);
         packetizer.addSection(section);
 
@@ -720,7 +720,7 @@ void RemuxerHandler::onMhTot(const std::shared_ptr<MmtTlv::MhTot>& mhTot)
     tot.serialize(duck, table);
     ts::OneShotPacketizer packetizer(duck, DVB_TOT_PID);
 
-    for (int i = 0; i < table.sectionCount(); i++) {
+    for (long unsigned int i = 0; i < table.sectionCount(); i++) {
         const ts::SectionPtr& section = table.sectionAt(i);
 
         packetizer.addSection(section);
@@ -749,7 +749,7 @@ void RemuxerHandler::onMhCdt(const std::shared_ptr<MmtTlv::MhCdt>& mhCdt)
     cdt.serialize(duck, table);
     ts::OneShotPacketizer packetizer(duck, ISDB_CDT_PID);
 
-    for (int i = 0; i < table.sectionCount(); i++) {
+    for (long unsigned int i = 0; i < table.sectionCount(); i++) {
         const ts::SectionPtr& section = table.sectionAt(i);
         section.get()->setSectionNumber(mhCdt->sectionNumber);
         section.get()->setLastSectionNumber(mhCdt->lastSectionNumber);
@@ -776,7 +776,7 @@ void RemuxerHandler::onNit(const std::shared_ptr<MmtTlv::Nit>& nit)
         {
             auto mmtDescriptor = std::dynamic_pointer_cast<MmtTlv::NetworkNameDescriptor>(descriptor);
             auto tsDescriptor = DescriptorConverter<MmtTlv::NetworkNameDescriptor>::convert(*mmtDescriptor);
-            
+
             tsNit.descs.add(duck, tsDescriptor);
             break;
         }
@@ -793,7 +793,7 @@ void RemuxerHandler::onNit(const std::shared_ptr<MmtTlv::Nit>& nit)
             {
                 auto mmtDescriptor = std::dynamic_pointer_cast<MmtTlv::ServiceListDescriptor>(descriptor);
                 auto tsDescriptor = DescriptorConverter<MmtTlv::ServiceListDescriptor>::convert(*mmtDescriptor);
-                
+
                 tsNit.transports[tsid].descs.add(duck, tsDescriptor);
                 break;
             }
@@ -805,7 +805,7 @@ void RemuxerHandler::onNit(const std::shared_ptr<MmtTlv::Nit>& nit)
     tsNit.serialize(duck, table);
     ts::OneShotPacketizer packetizer(duck, DVB_NIT_PID);
 
-    for (int i = 0; i < table.sectionCount(); i++) {
+    for (long unsigned int i = 0; i < table.sectionCount(); i++) {
         const ts::SectionPtr& section = table.sectionAt(i);
         section->setSectionNumber(nit->sectionNumber);
         section->setLastSectionNumber(nit->lastSectionNumber);

@@ -11,7 +11,7 @@
 #include <errno.h>
 
 namespace MmtTlv {
-    
+
 namespace Common {
 
 class ReadStream final {
@@ -25,7 +25,7 @@ public:
     ReadStream& operator=(const ReadStream&) = delete;
 
     ReadStream(ReadStream&&) = default;
-    ReadStream& operator=(ReadStream&&) = default;
+    ReadStream& operator=(ReadStream&&) = delete;
 
     bool isEof() const { return size == cur; }
     size_t leftBytes() const { return size - cur; }
@@ -46,13 +46,13 @@ public:
     }
 
     size_t read(void* dst, size_t size) {
-        size_t ret = peek(dst, size);
+        peek(dst, size);
         cur += size;
         return size;
     }
 
     size_t read(std::span<uint8_t> data) {
-        size_t ret = peek(data);
+        peek(data);
         cur += data.size();
         return data.size();
     }
@@ -152,7 +152,7 @@ public:
         buffer.insert(buffer.end(), data.begin(), data.end());
         return data.size();
     }
-    
+
     size_t write(std::initializer_list<uint8_t> data) {
         buffer.insert(buffer.end(), data.begin(), data.end());
         return data.size();
@@ -173,7 +173,7 @@ public:
     size_t put64U(uint64_t value) {
         return writeObject(value);
     }
-    
+
     size_t putBe16U(uint16_t value) {
         return writeObject(swapEndian16(value));
     }
