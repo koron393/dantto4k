@@ -6,11 +6,11 @@ constexpr uint8_t STREAM_TYPE_VIDEO_MPEG1					= 0x01;
 constexpr uint8_t STREAM_TYPE_VIDEO_MPEG2					= 0x02;
 constexpr uint8_t STREAM_TYPE_AUDIO_MPEG1					= 0x03;
 constexpr uint8_t STREAM_TYPE_AUDIO_MPEG2					= 0x04;
-constexpr uint8_t STREAM_TYPE_PRIVATE_SECTION				= 0x05;
+constexpr uint8_t STREAM_TYPE_PRIVATE_SECTION					= 0x05;
 constexpr uint8_t STREAM_TYPE_PRIVATE_DATA					= 0x06;
-constexpr uint8_t STREAM_TYPE_ISO_IEC_13818_6_TYPE_D		= 0x0d;
+constexpr uint8_t STREAM_TYPE_ISO_IEC_13818_6_TYPE_D				= 0x0d;
 constexpr uint8_t STREAM_TYPE_AUDIO_AAC						= 0x0f;
-constexpr uint8_t STREAM_TYPE_AUDIO_AAC_LATM				= 0x11;
+constexpr uint8_t STREAM_TYPE_AUDIO_AAC_LATM					= 0x11;
 constexpr uint8_t STREAM_TYPE_VIDEO_MPEG4					= 0x10;
 constexpr uint8_t STREAM_TYPE_METADATA						= 0x15;
 constexpr uint8_t STREAM_TYPE_VIDEO_H264					= 0x1b;
@@ -27,6 +27,14 @@ constexpr uint8_t STREAM_TYPE_AUDIO_TRUEHD					= 0x83;
 constexpr uint8_t STREAM_TYPE_AUDIO_EAC3					= 0x87;
 
 constexpr uint16_t PCR_PID = 0x01FF;
+
+const uint32_t MPEG_PAT_PID	= 0x00000000;
+const uint32_t DVB_NIT_PID	= 0x00000016;
+const uint32_t DVB_SDT_PID	= 0x00000017;
+const uint32_t DVB_EIT_PID	= 0x00000018;
+const uint32_t DVB_TOT_PID	= 0x00000020;
+const uint32_t ISDB_BIT_PID	= 0x00000036;
+const uint32_t ISDB_CDT_PID	= 0x00000041;
 
 namespace MmtTlv {
 
@@ -76,7 +84,7 @@ public:
 
 private:
 	void writeStream(const std::shared_ptr<MmtTlv::MmtStream> mmtStream, const std::shared_ptr<MmtTlv::MfuData>& mfuData, const std::vector<uint8_t>& data);
-	
+
 	std::vector<uint8_t>& output;
 	MmtTlv::MmtTlvDemuxer& demuxer;
 
