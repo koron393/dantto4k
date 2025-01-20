@@ -1,7 +1,9 @@
 #include "config.h"
 #include <iostream>
+#ifdef _WIN32
 #define _WINSOCKAPI_
 #include <windows.h>
+#endif
 
 Config config = Config{};
 
@@ -12,6 +14,7 @@ static std::string trim(const std::string& str) {
     return str.substr(first, last - first + 1);
 }
 
+#ifdef _WIN32
 std::string getConfigFilePath(void* hModule) {
     char g_IniFilePath[_MAX_FNAME];
     GetModuleFileNameA((HMODULE)hModule, g_IniFilePath, MAX_PATH);
@@ -24,6 +27,7 @@ std::string getConfigFilePath(void* hModule) {
 
     return g_IniFilePath;
 }
+#endif
 
 Config loadConfig(const std::string& filename)
 {

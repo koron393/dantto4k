@@ -1,7 +1,9 @@
 #include "acascard.h"
 #include <random>
 #include <openssl/evp.h>
+#ifdef _WIN32
 #pragma comment(lib, "Winscard.lib")
+#endif
 
 namespace MmtTlv::Acas {
 

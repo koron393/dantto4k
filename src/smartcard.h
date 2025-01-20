@@ -3,10 +3,12 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <winscard.h>
+#ifdef _WIN32
 #define _WINSOCKAPI_
 #include <Windows.h>
-#include <winscard.h>
 #pragma comment(lib, "Winscard.lib")
+#endif
 
 namespace MmtTlv::Acas {
 

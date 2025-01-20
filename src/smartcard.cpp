@@ -1,4 +1,4 @@
-#include "SmartCard.h"
+#include "smartcard.h"
 
 namespace MmtTlv::Acas {
 
@@ -24,7 +24,11 @@ void SmartCard::connect() {
 
     if(smartCardReaderName == "") {
         char* readers = nullptr;
+#ifdef _WIN32
         result = SCardListReadersA(hContext, nullptr, (LPSTR)&readers, &readersSize);
+#else
+        result = SCardListReaders(hContext, nullptr, (LPSTR)&readers, &readersSize);
+#endif
         if (result != SCARD_S_SUCCESS) {
             throw std::runtime_error("Failed to list smart card readers. (result: " + std::to_string(result) + ")");
         }
@@ -37,7 +41,11 @@ void SmartCard::connect() {
     }
 
 
+#ifdef _WIN32
     result = SCardConnectA(hContext, readerName.c_str(), SCARD_SHARE_SHARED, SCARD_PROTOCOL_T0 | SCARD_PROTOCOL_T1, &hCard, &dwActiveProtocol);
+#else
+    result = SCardConnect(hContext, readerName.c_str(), SCARD_SHARE_SHARED, SCARD_PROTOCOL_T0 | SCARD_PROTOCOL_T1, &hCard, &dwActiveProtocol);
+#endif
     if (result != SCARD_S_SUCCESS) {
         throw std::runtime_error("Failed to connect to smart card. (result: " + std::to_string(result) + ")");
     }

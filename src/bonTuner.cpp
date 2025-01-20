@@ -12,7 +12,11 @@ bool CBonTuner::init()
 {
 	HINSTANCE hBonDriverDLL = LoadLibraryA(config.bondriverPath.c_str());
 	if (!hBonDriverDLL) {
+#ifdef _WIN32
 		std::cerr << "Failed to load BonDriver (Error code: " << GetLastError() << ")" << std::endl;
+#else
+		std::cerr << "Failed to load BonDriver (Error code: " << errno << ")" << std::endl;
+#endif
 		return false;
 	}
 
