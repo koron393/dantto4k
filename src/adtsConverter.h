@@ -1,6 +1,8 @@
 #pragma once
 #include <vector>
 
+#include <stdint.h>
+
 class ADTSConverter {
 public:
 	bool convert(uint8_t* input, size_t size, std::vector<uint8_t>& output);
