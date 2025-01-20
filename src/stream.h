@@ -7,6 +7,9 @@
 #include "swap.h"
 #include <span>
 
+#include <string.h>
+#include <errno.h>
+
 namespace MmtTlv {
     
 namespace Common {
