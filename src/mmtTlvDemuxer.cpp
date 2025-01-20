@@ -9,7 +9,7 @@
 #include "mhTot.h"
 #include "mhBit.h"
 #include "mmtStream.h"
-#include "MmtTlvDemuxer.h"
+#include "mmtTlvDemuxer.h"
 #include "mpt.h"
 #include "fragmentAssembler.h"
 #include "mfuDataProcessorFactory.h"
@@ -32,15 +32,17 @@
 #include "caMessage.h"
 
 namespace MmtTlv {
-
 MmtTlvDemuxer::MmtTlvDemuxer()
 {
+//#ifdef _WIN32
     smartCard = std::make_shared<Acas::SmartCard>();
     acasCard = std::make_unique<Acas::AcasCard>(smartCard);
+//#endif
 }
 
 bool MmtTlvDemuxer::init()
 {
+//#ifdef _WIN32
     try {
         smartCard->init();
         smartCard->connect();
@@ -48,7 +50,7 @@ bool MmtTlvDemuxer::init()
     catch (const std::runtime_error& e) {
         std::cerr << e.what() << std::endl;
     }
-
+//#endif
     return true;
 }
 
@@ -58,7 +60,7 @@ void MmtTlvDemuxer::setDemuxerHandler(DemuxerHandler& demuxerHandler)
 }
 
 void MmtTlvDemuxer::setSmartCardReaderName(const std::string& smartCardReaderName) {
-    
+
     smartCard->setSmartCardReaderName(smartCardReaderName);
 }
 
@@ -125,11 +127,11 @@ int MmtTlvDemuxer::processPacket(Common::ReadStream& stream)
         if (!compressedIPPacket.unpack(tlvDataStream)) {
             break;
         }
-        
+
         if (!mmt.unpack(tlvDataStream)) {
             break;
         }
-        
+
         auto mmtStat = statistics.getMmtStat(mmt.packetId);
         if (mmtStat->count == 0) {
             mmtStat->lastPacketSequenceNumber = mmt.packetSequenceNumber;
@@ -163,6 +165,8 @@ int MmtTlvDemuxer::processPacket(Common::ReadStream& stream)
             break;
         case PayloadType::ContainsOneOrMoreControlMessage:
             processSignalingMessages(mmtpPayloadStream);
+            break;
+        case PayloadType::Undefined:
             break;
         }
         break;
@@ -216,7 +220,7 @@ void MmtTlvDemuxer::processCaMessage(Common::ReadStream& stream)
     if (!message.unpack(stream)) {
         return;
     }
-    
+
     processMmtTable(stream);
 }
 
@@ -236,7 +240,7 @@ void MmtTlvDemuxer::processDataTransmissionMessage(Common::ReadStream& stream)
     if (!message.unpack(stream)) {
         return;
     }
-    
+
     processMmtTable(stream);
 }
 
@@ -539,7 +543,7 @@ void MmtTlvDemuxer::processMmtPackageTable(const std::shared_ptr<Mpt>& mpt)
             {
                 auto mmtDescriptor = std::dynamic_pointer_cast<MmtTlv::MhAudioComponentDescriptor>(descriptor);
                 mmtStream->mhAudioComponentDescriptor = mmtDescriptor;
-                
+
                 statistics.getMmtStat(mmtStream->packetId)->audioComponentType = mmtDescriptor->componentType;
                 statistics.getMmtStat(mmtStream->packetId)->audioSamplingRate = mmtDescriptor->samplingRate;
                 break;
@@ -662,7 +666,9 @@ void MmtTlvDemuxer::processMpuExtendedTimestampDescriptor(const std::shared_ptr<
 void MmtTlvDemuxer::processEcm(std::shared_ptr<Ecm> ecm)
 {
     try {
+//#ifdef _WIN32
         acasCard->decryptEcm(ecm->ecmData);
+//#endif
     }
     catch (const std::runtime_error& e) {
         std::cerr << e.what() << std::endl;
@@ -675,13 +681,17 @@ void MmtTlvDemuxer::clear()
     mfuData.clear();
     mapStream.clear();
     mapStreamByStreamIdx.clear();
+//#ifdef _WIN32
     acasCard->clear();
+//#endif
     statistics.clear();
 }
 
 void MmtTlvDemuxer::release()
 {
+//#ifdef _WIN32
     smartCard->release();
+//#endif
 }
 
 void MmtTlvDemuxer::printStatistics() const
@@ -748,7 +758,7 @@ void MmtTlvDemuxer::processMpu(Common::ReadStream& stream)
     assembler->checkState(mmt.packetSequenceNumber);
 
     mmtStream->rapFlag = mmt.rapFlag;
-    
+
 
     if (mpu.aggregateFlag == 0) {
         DataUnit dataUnit;
@@ -800,7 +810,7 @@ void MmtTlvDemuxer::processMfuData(Common::ReadStream& stream)
         if (it == mapStream.end()) {
             return;
         }
-        
+
         if(demuxerHandler) {
             switch (mmtStream->assetType) {
             case AssetType::hev1:
@@ -853,7 +863,7 @@ void MmtTlvDemuxer::processSignalingMessages(Common::ReadStream& stream)
                 length = nstream.getBe16U();
 
             if (assembler->assemble(signalingMessage.payload, signalingMessage.fragmentationIndicator, mmt.packetSequenceNumber)) {
-                Common::ReadStream messageStream(assembler->data);
+                Common::ReadStream messageStream(assembler->data, length);
                 processSignalingMessage(messageStream);
                 assembler->clear();
             }
