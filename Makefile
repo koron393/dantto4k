@@ -1,5 +1,6 @@
 PROJECT_NAME = dantto4k
 
+PREFIX = /usr
 SRC_DIR = src
 OBJ_DIR = build
 
@@ -13,9 +14,9 @@ TSDUCK_LIB = $(shell pkg-config --libs tsduck)
 PCSC_INC = $(shell pkg-config --cflags-only-I libpcsclite)
 PCSC_LIB = $(shell pkg-config --libs libpcsclite)
 
-CXX = g++
-CXXFLAGS = -std=c++20 -Wall -maes -msse4.1 $(TSDUCK_INC) $(PCSC_INC) -Ithirdparty/asio/asio/include
-LDFLAGS = $(TSDUCK_LIB) $(PCSC_LIB)
+CXX = clang++
+CXXFLAGS += -std=c++20 -Wall -maes -msse4.1 $(TSDUCK_INC) $(PCSC_INC)
+LDFLAGS += $(TSDUCK_LIB) $(PCSC_LIB)
 
 EXEC = $(OBJ_DIR)/$(PROJECT_NAME)
 
@@ -34,6 +35,7 @@ clean:
 	rm -rf $(OBJ_DIR)
 
 install:
-	cp $(EXEC) /usr/local/bin/$(PROJECT_NAME)
+	install -d $(DESTDIR)/$(PREFIX)/bin
+	install -m 755 $(EXEC) $(DESTDIR)/$(PREFIX)/bin
 
 .PHONY: all clean install
