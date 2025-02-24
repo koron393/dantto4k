@@ -30,10 +30,10 @@ std::pair<int64_t, int64_t> MmtStream::getNextPtsDts()
 
 std::pair<const MpuTimestampDescriptor::Entry, const MpuExtendedTimestampDescriptor::Entry> MmtStream::getCurrentTimestamp() const
 {
-    auto mpuTimestampIt = std::find_if(mpuTimestamps.begin(), mpuTimestamps.end(),
+    auto mpuTimestampIt = std::ranges::find_if(mpuTimestamps.begin(), mpuTimestamps.end(),
         [this](const auto& entry) { return entry.mpuSequenceNumber == lastMpuSequenceNumber; });
 
-    auto extendedTimestampIt = std::find_if(mpuExtendedTimestamps.begin(), mpuExtendedTimestamps.end(),
+    auto extendedTimestampIt = std::ranges::find_if(mpuExtendedTimestamps.begin(), mpuExtendedTimestamps.end(),
         [this](const auto& entry) { return entry.mpuSequenceNumber == lastMpuSequenceNumber; });
 
     if (mpuTimestampIt == mpuTimestamps.end() || extendedTimestampIt == mpuExtendedTimestamps.end()) {
