@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "acascard.h"
 #include "dataUnit.h"
 #include "ecm.h"
