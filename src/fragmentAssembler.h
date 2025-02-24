@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <iostream>
+#include <stdint.h>
 #include "mmtFragment.h"
 
 namespace MmtTlv {
