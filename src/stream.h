@@ -20,7 +20,7 @@ public:
     ReadStream& operator=(const ReadStream&) = delete;
 
     ReadStream(ReadStream&&) = default;
-    ReadStream& operator=(ReadStream&&) = default;
+    ReadStream& operator=(ReadStream&&) = delete;
 
     bool isEof() const { return size == pos; }
     size_t leftBytes() const { return size - pos; }
