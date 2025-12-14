@@ -152,7 +152,8 @@ struct DescriptorConverter<MmtTlv::MhExtendedEventDescriptor> {
         tsDescriptor[6] = static_cast<uint8_t>(itemsLength);
 
         size_t pos = 0;
-        for (size_t i = 0; i < mmtDescriptor.entries.size(); ++i) {
+        size_t i = 0;
+        for (size_t n = 0; n < mmtDescriptor.entries.size(); n++) {
             tsDescriptor[7 + pos] = static_cast<uint8_t>(aribItemDescriptionChars[i].size());
             pos++;
 
