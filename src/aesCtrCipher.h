@@ -193,7 +193,7 @@ private:
         c3 = _mm_aesenclast_si128(c3, k);
     }
 
-    std::array<uint8_t, 16> key{};
+    [[maybe_unused]] std::array<uint8_t, 16> key;
     std::array<uint8_t, 16> iv;
     __m128i roundKeys[11];
 };
