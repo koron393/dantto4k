@@ -27,8 +27,7 @@ void CasProxyClient::connect() {
         }
     });
 
-    asio::ip::tcp::resolver::query query(host, std::to_string(port));
-    resolver.async_resolve(query,
+    resolver.async_resolve(host, std::to_string(port),
         [this](std::error_code ec, asio::ip::tcp::resolver::results_type results) {
             if (!ec) {
                 asio::async_connect(socket, results,
