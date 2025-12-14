@@ -6,7 +6,7 @@ namespace MmtTlv {
 class MpuVideoProcessor : public MpuProcessorTemplate<AssetType::hev1> {
 public:
 	std::optional<MfuData> process(MmtStream& mmtStream, const std::vector<uint8_t>& data, FragmentationIndicator fragmentationIndicator) override;
-	void clear();
+	void clear() override;
 
 private:
 	std::vector<uint8_t> buffer;

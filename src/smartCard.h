@@ -107,10 +107,10 @@ public:
     void disconnect() override;
     bool isConnected() const override;
     bool isInited() const override;
-    virtual std::vector<std::string> getReaders() const;
+    virtual std::vector<std::string> getReaders() const override;
     uint32_t transmit(const std::vector<uint8_t>& message, ApduResponse& response) override;
-    virtual void setSmartCardReaderName(const std::string& name);
-    virtual std::string getSmartCardReaderName() const;
+    virtual void setSmartCardReaderName(const std::string& name) override;
+    virtual std::string getSmartCardReaderName() const override;
 
 protected:
     void beginTransaction() override;
@@ -159,11 +159,11 @@ public:
     uint32_t reconnect() override;
     void disconnect() override;
     bool isConnected() const override;
-    bool isInited() const;
-    virtual std::vector<std::string> getReaders() const;
+    bool isInited() const override;
+    virtual std::vector<std::string> getReaders() const override;
     uint32_t transmit(const std::vector<uint8_t>& message, ApduResponse& response) override;
-    virtual void setSmartCardReaderName(const std::string& name);
-    virtual std::string getSmartCardReaderName() const;
+    virtual void setSmartCardReaderName(const std::string& name) override;
+    virtual std::string getSmartCardReaderName() const override;
 
 protected:
     void beginTransaction() override;
