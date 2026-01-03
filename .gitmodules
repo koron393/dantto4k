@@ -1,6 +1,8 @@
 [submodule "thirdparty/asio"]
 	path = thirdparty/asio
 	url = https://github.com/chriskohlhoff/asio.git
+	shallow = true
 [submodule "thirdparty/tsduck"]
 	path = thirdparty/tsduck
 	url = https://github.com/tsduck/tsduck.git
+	shallow = true
