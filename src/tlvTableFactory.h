@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 #include <memory>
 
 namespace MmtTlv {
@@ -7,7 +8,6 @@ class TlvTableFactory {
 public:
 	static std::shared_ptr<TlvTableBase> create(uint8_t id);
 	static bool isValidId(uint8_t id);
-	
 };
 
 }
